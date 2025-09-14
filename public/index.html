@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdSense Auditor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      max-width: 600px;
+    }
+    h1 {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      margin: 0.5rem 0 0.25rem;
+    }
+    input[type="url"] {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    pre {
+      background-color: #f4f4f4;
+      padding: 1rem;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>AdSense Auditor</h1>
+  <p>Enter a website URL to perform a basic AdSense compliance check.</p>
+  <label for="urlInput">Website URL:</label>
+  <input id="urlInput" type="url" placeholder="https://example.com" />
+  <button id="auditBtn">Audit</button>
+  <h2>Results</h2>
+  <pre id="results">Awaiting audit…</pre>
+  <script>
+    const btn = document.getElementById("auditBtn");
+    const urlInput = document.getElementById("urlInput");
+    const resultsPre = document.getElementById("results");
+
+    btn.addEventListener("click", async () => {
+      const url = urlInput.value.trim();
+      if (!url) {
+        alert("Please enter a URL to audit.");
+        return;
+      }
+      resultsPre.textContent = "Auditing...";
+      try {
+        const response = await fetch("/api/audit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const data = await response.json();
+        resultsPre.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        resultsPre.textContent = "Error occurred: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
