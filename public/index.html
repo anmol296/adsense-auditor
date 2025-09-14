@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>AdSense Auditor</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.4; }
+    h1 { color: #333; margin-bottom: 20px; }
+    form { margin-bottom: 20px; }
+    input[type="url"] { width: 60%; padding: 8px; }
+    button { padding: 8px 12px; margin-left: 8px; }
+    #results { margin-top: 20px; }
+    .ok { color: green; }
+    .fail { color: red; }
+    table { border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 6px 10px; }
+  </style>
+</head>
+<body>
+  <h1>AdSense Auditor</h1>
+  <form id="audit-form">
+    <label for="url">Enter URL to audit:</label><br/>
+    <input id="url" type="url" placeholder="https://example.com" required>
+    <button type="submit">Audit</button>
+  </form>
+  <div id="results"></div>
+<script>
+document.getElementById('audit-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const url = document.getElementById('url').value.trim();
+  const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = 'Auditing...';
+  try {
+    const resp = await fetch('/api/audit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.ok) {
+      resultsDiv.innerHTML = '<p class="fail">Audit failed: ' + (data.error || 'Unknown error') + '</p>';
+      return;
+    }
+    let html = '<h2>Audit Results</h2>';
+    if (data.page) {
+      html += '<p><strong>Title:</strong> ' + (data.page.title || '(none)') + '</p>';
+      html += '<p><strong>HTML length:</strong> ' + data.page.length + '</p>';
+    }
+    if (data.checks) {
+      html += '<h3>Checks</h3><ul>';
+      for (const [key, value] of Object.entries(data.checks)) {
+        html += '<li><strong>' + key.replace(/_/g, ' ') + ':</strong> ' + (value ? '<span class="fail">Yes</span>' : '<span class="ok">No</span>') + '</li>';
+      }
+      html += '</ul>';
+    }
+    if (data.notes && Array.isArray(data.notes)) {
+      html += '<h3>Notes</h3><ul>';
+      data.notes.forEach(note => {
+        html += '<li>' + note + '</li>';
+      });
+      html += '</ul>';
+    }
+    resultsDiv.innerHTML = html;
+  } catch (err) {
+    console.error(err);
+    resultsDiv.innerHTML = '<p class="fail">Audit request failed.</p>';
+  }
+});
+</script>
+</body>
+</html>
